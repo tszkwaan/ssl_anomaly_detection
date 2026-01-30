@@ -1,43 +1,43 @@
 class Config(object):
     def __init__(self):
         # ==========================
-        # 1. 模型結構參數 (Model Configs)
+        # 1. Model Architecture Parameters
         # ==========================
-        self.input_channels = 25   # PSM 數據集的特徵數 (必須是 26)
-        self.kernel_size = 8       # 卷積核大小，配合 Window=100 設小一點
-        self.stride = 1            # 步長
-        self.final_out_channels = 128 # 編碼器輸出的特徵深度
+        self.input_channels = 25   # Number of features in PSM dataset
+        self.kernel_size = 8       # Convolution kernel size, set smaller for Window=100
+        self.stride = 1            # Stride
+        self.final_out_channels = 128 # Feature depth of encoder output
 
-        self.num_classes = 2       # 0:正常, 1:異常
-        self.dropout = 0.35        
+        self.num_classes = 2       # 0: normal, 1: anomaly
+        self.dropout = 0.35
         
-        # features_len 是 CNN 輸出後的特徵時間長度
-        # 輸入 WIN_SIZE -> 經過 3 層 CNN + 3 層 MaxPool -> 輸出長度
+        # features_len is the temporal length of features after CNN output
+        # Input WIN_SIZE -> After 3 CNN layers + 3 MaxPool layers -> Output length
         # WIN_SIZE=100 -> features_len≈15, WIN_SIZE=256 -> features_len≈34
-        # 注意：evaluate_anomaly.py 會自動計算正確的值，這裡只是預設值
+        # Note: This is just a default value, actual value should match the trained model
         self.features_len = 15    
 
         # ==========================
-        # 2. 訓練參數 (Training Configs)
+        # 2. Training Parameters
         # ==========================
-        self.num_epoch = 40        # 訓練輪數，40 輪對 PSM 應該足夠收斂
+        self.num_epoch = 40        # Number of training epochs, 40 epochs should be sufficient for PSM convergence
 
         # ==========================
-        # 3. 優化器參數 (Optimizer Parameters)
+        # 3. Optimizer Parameters
         # ==========================
         self.beta1 = 0.9
         self.beta2 = 0.99
-        self.lr = 3e-4             # 學習率
+        self.lr = 3e-4             # Learning rate
 
         # ==========================
-        # 4. 數據加載參數 (Data Parameters)
+        # 4. Data Loading Parameters
         # ==========================
-        self.drop_last = True      # 如果最後一批數據不足 batch_size 則丟棄
-        self.batch_size = 32       # 建議：如果您的顯存不大，先設 32；如果不夠跑再改 16
+        self.drop_last = True      # Drop the last batch if it's smaller than batch_size
+        self.batch_size = 32       # Recommended: Start with 32 if GPU memory is limited; reduce to 16 if needed
 
         # ==========================
-        # 5. 子模組配置 (Sub-modules)
-        # (這些絕對不能刪！)
+        # 5. Sub-module Configurations
+        # (These must not be deleted!)
         # ==========================
         self.Context_Cont = Context_Cont_configs()
         self.TC = TC()
@@ -45,29 +45,29 @@ class Config(object):
 
 
 # ==========================================
-# 數據增強配置 (Augmentations)
+# Data Augmentation Configuration
 # ==========================================
 class augmentations(object):
     def __init__(self):
-        self.jitter_scale_ratio = 1.1 # 縮放強度的參數
-        self.jitter_ratio = 0.8       # 加噪聲的參數
-        self.max_seg = 8              # Permutation 切割的最大段數
+        self.jitter_scale_ratio = 1.1 # Scaling strength parameter
+        self.jitter_ratio = 0.8       # Noise addition parameter
+        self.max_seg = 8              # Maximum number of segments for permutation
 
 
 # ==========================================
-# 上下文對比配置 (Contextual Contrasting)
+# Contextual Contrasting Configuration
 # ==========================================
 class Context_Cont_configs(object):
     def __init__(self):
-        self.temperature = 0.1          # InfoNCE Loss 的溫度參數
-        self.use_cosine_similarity = True # 使用餘弦相似度
+        self.temperature = 0.1          # Temperature parameter for InfoNCE Loss
+        self.use_cosine_similarity = True # Use cosine similarity
 
 
 # ==========================================
-# 時序對比配置 (Temporal Contrasting)
+# Temporal Contrasting Configuration
 # ==========================================
 class TC(object):
     def __init__(self):
-        self.hidden_dim = 100   # TC 模組內部的隱藏層維度
-        self.timesteps = 6      # 預測未來幾個時間步 (不能大於 features_len)
-                                # 建議設小一點 (例如 6-10)，因為 features_len 只有 24
+        self.hidden_dim = 100   # Hidden layer dimension inside TC module
+        self.timesteps = 6      # Number of future timesteps to predict (cannot exceed features_len)
+                                # Recommended to set smaller (e.g., 6-10) since features_len is only 15

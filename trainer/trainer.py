@@ -20,11 +20,11 @@ def Trainer(model, temporal_contr_model, model_optimizer, temp_cont_optimizer, t
     criterion = nn.CrossEntropyLoss()
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min')
 
-    # 計算總 epoch 數和進度
+    # Calculate total number of epochs and progress
     total_epochs = config.num_epoch
     
     for epoch in range(1, config.num_epoch + 1):
-        # 計算並顯示 epoch 進度
+        # Calculate and display epoch progress
         epoch_progress = (epoch / total_epochs) * 100
         print(f"\n{'='*60}")
         print(f"Epoch {epoch}/{total_epochs} ({epoch_progress:.1f}%)")
@@ -36,14 +36,14 @@ def Trainer(model, temporal_contr_model, model_optimizer, temp_cont_optimizer, t
         if training_mode != 'self_supervised':  # use scheduler in all other modes.
             scheduler.step(valid_loss)
 
-        # 根據訓練模式顯示不同的信息
+        # Display different information based on training mode
         if training_mode == "self_supervised":
-            # 在 self_supervised 模式下，accuracy 不適用（無監督學習）
+            # In self_supervised mode, accuracy is not applicable (unsupervised learning)
             logger.debug(f'\nEpoch : {epoch}\n'
                          f'Train Loss     : {train_loss:.4f}\t | \tTrain Accuracy     : N/A (Self-Supervised)\n'
                          f'Valid Loss     : {valid_loss:.4f}\t | \tValid Accuracy     : N/A (Self-Supervised)')
             
-            # 同時打印到控制台
+            # Also print to console
             print(f"Train Loss     : {train_loss:.4f}\t | \tTrain Accuracy     : N/A (Self-Supervised)")
             print(f"Valid Loss     : {valid_loss:.4f}\t | \tValid Accuracy     : N/A (Self-Supervised)")
         else:
@@ -74,10 +74,10 @@ def model_train(model, temporal_contr_model, model_optimizer, temp_cont_optimize
     model.train()
     temporal_contr_model.train()
 
-    # 計算總 batch 數
+    # Calculate total number of batches
     total_batches = len(train_loader)
     
-    # 使用 tqdm 顯示進度條
+    # Use tqdm to display progress bar
     pbar = tqdm(enumerate(train_loader), total=total_batches, 
                 desc=f"Epoch {epoch}/{total_epochs}", 
                 leave=False, 
@@ -123,22 +123,22 @@ def model_train(model, temporal_contr_model, model_optimizer, temp_cont_optimize
             loss = criterion(predictions, labels)
             total_acc.append(labels.eq(predictions.detach().argmax(dim=1)).float().mean())
 
-        # 檢查 loss 是否為 NaN 或 Inf
+        # Check if loss is NaN or Inf
         if torch.isnan(loss) or torch.isinf(loss):
-            pbar.write(f"警告：在第 {batch_idx} 個 batch 檢測到 NaN/Inf loss，跳過此 batch")
+            pbar.write(f"Warning: NaN/Inf loss detected at batch {batch_idx}, skipping this batch")
             continue
 
         total_loss.append(loss.item())
         loss.backward()
         
-        # 梯度裁剪，防止梯度爆炸
+        # Gradient clipping to prevent gradient explosion
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         torch.nn.utils.clip_grad_norm_(temporal_contr_model.parameters(), max_norm=1.0)
         
         model_optimizer.step()
         temp_cont_optimizer.step()
         
-        # 更新進度條顯示當前 loss 和平均 loss
+        # Update progress bar to show current loss and average loss
         current_loss = loss.item()
         batch_progress = ((batch_idx + 1) / total_batches) * 100
         avg_loss = sum(total_loss) / len(total_loss) if total_loss else 0.0

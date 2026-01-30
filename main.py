@@ -78,7 +78,7 @@ logger.debug(f'Mode:    {training_mode}')
 logger.debug("=" * 45)
 
 # Load datasets
-# 使用 home_path 構建數據路徑，確保在 Colab 等環境中正確工作
+# Use home_path to construct data path, ensuring correct operation in environments like Colab
 data_path = os.path.join(args.home_path, "data", data_type)
 logger.debug(f"Loading data from: {data_path}")
 train_dl, valid_dl, test_dl = data_generator(data_path, configs, training_mode)
@@ -109,10 +109,10 @@ if training_mode == "train_linear" or "tl" in training_mode:
     pretrained_dict = chkpoint["model_state_dict"]
     model_dict = model.state_dict()
 
-    # 1. filter out unnecessary keys
+    # 1. Filter out unnecessary keys
     pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
 
-    # delete these parameters (Ex: the linear layer at the end)
+    # Delete these parameters (e.g., the linear layer at the end)
     del_list = ['logits']
     pretrained_dict_copy = pretrained_dict.copy()
     for i in pretrained_dict_copy.keys():
