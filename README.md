@@ -1,116 +1,174 @@
-# Time-Series Representation Learning via Temporal and Contextual Contrasting (TS-TCC) [[Paper](https://www.ijcai.org/proceedings/2021/0324.pdf)] [[Cite](#citation)]
-#### *by: Emadeldeen Eldele, Mohamed Ragab, Zhenghua Chen, Min Wu, Chee Keong Kwoh, Xiaoli Li and Cuntai Guan*
-#### This work is accepted for publication in the International Joint Conferences on Artificial Intelligence (IJCAI-21) (Acceptance Rate: 13.9%).
+# TS-TCC for Anomaly Detection on PSM Dataset
 
-## :boom::boom: *Update:* We extended our method to the semi-supervised settings (CA-TCC). Please refer to the manuscript [Self-supervised Contrastive Representation Learning for Semi-supervised Time-Series Classification](http://arxiv.org/abs/2208.06616) for more details. [The code is also publicly available](https://github.com/emadeldeen24/CA-TCC). :boom::boom:
-## :boom::boom: Update 2: The extension CA-TCC has been accepted in the IEEE Transactions on Pattern Analysis and Machine Intelligence (**TPAMI**) :boom::boom:
+This repository contains an implementation of **Time-Series Representation Learning via Temporal and Contextual Contrasting (TS-TCC)** adapted for anomaly detection on the **PSM (Pooled Server Metrics)** dataset.
 
-## Abstract
-<p align="center">
-<img src="misc/TS_TCC.png" width="400" class="center">
-</p>
+## Overview
 
-Learning decent representations from unlabeled time-series data with temporal dynamics is a very challenging task. In this paper, we propose an unsupervised <b>T</b>ime-<b>S</b>eries representation learning framework via <b>T</b>emporal and <b>C</b>ontextual <b>C</b>ontrasting (<b>TS-TCC</b>), to learn time-series representation from unlabeled data. First, the raw time-series data are transformed into two different yet correlated views by using weak and strong augmentations. Second, we propose a novel temporal contrasting module to learn <i>robust</i> temporal representations by designing a tough cross-view prediction task. Last, to further learn <i>discriminative</i> representations, we propose a contextual contrasting module built upon the contexts from the temporal contrasting module. It attempts to maximize the similarity among different contexts of the same sample while minimizing similarity among contexts of different samples. Experiments have been carried out on three real-world time-series datasets. The results manifest that training a linear classifier on top of the features learned by our proposed TS-TCC performs comparably with the supervised training. Additionally, our proposed TS-TCC shows high efficiency in few-labeled data and transfer learning scenarios. 
+This project applies the TS-TCC self-supervised learning framework to learn robust time-series representations from unlabeled server monitoring data, then uses these representations for anomaly detection. The model achieves **F1-Score: 0.8161, Precision: 0.8351, Recall: 0.7979, AUROC: 0.6228** on the PSM dataset.
 
+## Dataset
 
-## Requirmenets:
-- Python3.x
-- Pytorch==1.7
-- Numpy
-- Sklearn
-- Pandas
-- openpyxl (for classification reports)
-- mne=='0.20.7' (For Sleep-EDF preprocessing)
-- mat4py (for Fault diagnosis preprocessing)
-## Datasets
-### Download datasets
-> `Update:` You can now find the preprocessed datasets [on this Dataverse](https://researchdata.ntu.edu.sg/dataverse/tstcc/)
+**PSM (Pooled Server Metrics)** is a server monitoring dataset containing:
+- **25 channels** of server metrics (CPU, memory, network, etc.)
+- **Window size**: 100 timesteps
+- **Task**: Binary anomaly detection (normal vs. anomaly)
 
-We used four public datasets in this study:
-- [Sleep-EDF](https://gist.github.com/emadeldeen24/a22691e36759934e53984289a94cb09b)
-- [HAR](https://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones)  
-- [Epilepsy](https://archive.ics.uci.edu/ml/datasets/Epileptic+Seizure+Recognition) (this dataset is recently removed for some reason, so I uploaded the data file to the repo)
-- [Fault Diagnosis](https://mb.uni-paderborn.de/en/kat/main-research/datacenter/bearing-datacenter/data-sets-and-download)
+The dataset is preprocessed into sliding windows with stride=10 for training and stride=100 for testing.
 
-### Preparing datasets
-The data should be in a separate folder called "data" inside the project folder.
-Inside that folder, you should have a separate folders; one for each dataset. Each subfolder should have "train.pt", "val.pt" and "test.pt" files.
-The structure of data files should in dictionary form as follows:
-`train.pt = {"samples": data, "labels: labels}`, and similarly `val.pt`, and `test.pt`
+## Model: TS-TCC
 
-The details of preprocessing is as follows:
-#### 1- Sleep-EDF dataset:
-Create a folder named `data_files` in the path `data_preprocessing/sleep-edf/`.
-Download the dataset files and place them in this folder. 
+**Time-Series Temporal and Contextual Contrasting (TS-TCC)** is a self-supervised learning framework that:
 
-Run the script `preprocess_sleep_edf.py` to generate the numpy files ... you will find the numpy files of 
-each PSG file in another folder named `sleepEDF20_fpzcz` (you can change these names from args).
-You will also find the data of each subject in the folder `sleepEDF20_fpzcz_subjects` (since each subject has two-night data)
+1. **Temporal Contrasting**: Learns robust temporal representations by predicting future timesteps across different augmented views
+2. **Contextual Contrasting**: Learns discriminative representations by maximizing similarity among contexts of the same sample while minimizing similarity among different samples
 
-Finally run the file `generate_train_val_test.py` to generate the files and it will automatically place
-them in the `data/sleepEDF` folder.
+The model architecture consists of:
+- **Encoder**: 3-layer CNN with MaxPooling
+- **Temporal Contrasting Module**: LSTM-based predictor
+- **Contextual Contrasting Module**: Contrastive learning with InfoNCE loss
 
-#### 2- UCI HAR dataset
-When you dowload the dataset and extract the zip file, you will find the data in a folder named
-`UCI HAR Dataset` ... place it in `data_preprocessing/uci_har/` folder and run `preprocess_har.py` file.
+## Key Modifications
 
-#### 3- Epilepsy and Fault diagnosis datasets:
-download the data file in `data_files` folder and run the preprocessing scripts.
+This implementation includes several improvements over the original TS-TCC:
 
+### 1. **Feature Extraction for Anomaly Detection**
+- **Mean Pooling**: Applied on temporal dimension after CNN encoding to extract fixed-size feature vectors
+- **Batch Processing**: Implemented batch-wise feature extraction to handle large datasets efficiently
+- **Correct Feature Usage**: Uses convolutional features (second return value) instead of logits for anomaly detection
 
-### Configurations
-The configuration files in the `config_files` folder should have the same name as the dataset folder name.
-For example, for HAR dataset, the data folder name is `HAR` and the configuration file is `HAR_Configs.py`.
-From these files, you can update the training parameters.
+### 2. **Data Preprocessing Enhancements**
+- **NaN/Inf Handling**: Comprehensive cleaning of missing and infinite values
+- **Robust Normalization**: Z-score normalization with zero-division protection
+- **Data Validation**: Checks for data format consistency and missing files
 
-## Training TS-TCC 
-You can select one of several training modes:
- - Random Initialization (random_init)
- - Supervised training (supervised)
- - Self-supervised training (self_supervised)
- - Fine-tuning the self-supervised model (fine_tune)
- - Training a linear classifier (train_linear)
+### 3. **Training Stability**
+- **Gradient Clipping**: Prevents gradient explosion (max_norm=1.0)
+- **NaN/Inf Detection**: Skips batches with invalid loss values
+- **Progress Tracking**: Real-time training progress with tqdm progress bars
 
-The code allows also setting a name for the experiment, and a name of separate runs in each experiment.
-It also allows the choice of a random seed value.
+### 4. **Anomaly Detection Pipeline**
+- **Cosine Similarity**: Uses cosine distance between test features and training data center
+- **Point Adjustment**: Implements point adjustment strategy for evaluation
+- **Threshold Search**: Brute-force search for optimal F1-Score threshold
 
-To use these options:
+### 5. **Configuration**
+- **Temperature**: Set to 0.1 for InfoNCE loss (tighter contrastive learning)
+- **Training Epochs**: 40 epochs for sufficient convergence
+- **Batch Size**: 32 (adjustable based on GPU memory)
+
+## Setup Instructions
+
+### Step 1: Data Preprocessing
+
+The processed PSM dataset CSV files are located in `data_preprocessing/PSM/`:
+- `train.csv`
+- `val.csv`
+- `test.csv`
+- `test_label.csv` (optional, will use dummy labels if not found)
+
+You need to run the preprocessing script to generate `.pt` files:
+
+```bash
+python data_preprocessing/PSM/generate_PSM.py
 ```
-python main.py --experiment_description exp1 --run_description run_1 --seed 123 --training_mode random_init --selected_dataset HAR
+
+This will:
+- Load CSV files (skip first column as timestamp)
+- Handle NaN/Inf values
+- Normalize data using Z-score
+- Create sliding windows (WIN_SIZE=100, STRIDE=10 for train/val, STRIDE=100 for test)
+- Save preprocessed data as `.pt` files in `data/PSM/`
+
+**Output files:**
+- `data/PSM/train.pt`
+- `data/PSM/val.pt`
+- `data/PSM/test.pt`
+
+### Step 2: Upload to Google Drive
+
+1. Upload the entire project folder to your Google Drive
+2. Note the path (e.g., `/content/drive/MyDrive/bosch/TS-TCC`)
+
+### Step 3: Run on Google Colab
+
+1. **Open the notebook**: `ssl_trial.ipynb` in Google Colab
+
+2. **Update the project path** in Cell 0:
+   ```python
+   project_path = '/content/drive/MyDrive/YOUR_PATH/TS-TCC'
+   ```
+
+3. **Run Cell 0**: This will:
+   - Mount Google Drive
+   - Change to project directory
+   - Verify required files exist
+   - Install dependencies
+
+4. **Run Cell 1**: This will:
+   - Check GPU availability
+   - Start training with self-supervised mode
+   - Training will take ~40 epochs (adjustable in `PSM_Configs.py`)
+
+5. **Run Cell 3**: After training completes, this will:
+   - Automatically find the latest checkpoint
+   - Load preprocessed data
+   - Extract features using the trained model
+   - Calculate anomaly scores
+   - Evaluate and visualize results
+
+## Project Structure
+
 ```
-Note that the name of the dataset should be the same name as inside the "data" folder, and the training modes should be
-the same as the ones above.
+TS-TCC/
+├── config_files/
+│   └── PSM_Configs.py          # Configuration for PSM dataset
+├── data/
+│   └── PSM/
+│       ├── train.pt            # Preprocessed training data
+│       ├── val.pt              # Preprocessed validation data
+│       └── test.pt             # Preprocessed test data
+├── data_preprocessing/
+│   └── PSM/
+│       ├── generate_PSM.py    # Data preprocessing script
+│       ├── train.csv           # Raw training data
+│       ├── val.csv             # Raw validation data
+│       └── test.csv            # Raw test data
+├── dataloader/
+│   ├── dataloader.py           # Data loading utilities
+│   └── augmentations.py       # Data augmentation functions
+├── models/
+│   ├── model.py                # Base encoder model
+│   ├── TC.py                   # Temporal Contrasting module
+│   ├── attention.py            # Attention mechanisms
+│   └── loss.py                 # Loss functions
+├── trainer/
+│   └── trainer.py              # Training and evaluation loops
+├── main.py                     # Main training script
+├── ssl_trial.ipynb             # Colab notebook for training and evaluation
+└── README.md                   # This file
+```
 
-To train the model for the `fine_tune` and `train_linear` modes, you have to run `self_supervised` first.
+## Configuration
 
+Key parameters in `config_files/PSM_Configs.py`:
+
+- `input_channels`: 25 (PSM dataset features)
+- `features_len`: 15 (CNN output temporal length for WIN_SIZE=100)
+- `num_epoch`: 40 (training epochs)
+- `batch_size`: 32 (adjust based on GPU memory)
+- `temperature`: 0.1 (InfoNCE loss temperature)
+- `timesteps`: 6 (temporal prediction steps)
 
 ## Results
-- The experiments are saved in "experiments_logs" directory by default (you can change that from args too).
-- Each experiment will have a log file and a final classification report in case of modes other that "self-supervised".
 
-## Citation
-If you found this work useful for you, please consider citing it.
-```
-@inproceedings{ijcai2021-324,
-  title     = {Time-Series Representation Learning via Temporal and Contextual Contrasting},
-  author    = {Eldele, Emadeldeen and Ragab, Mohamed and Chen, Zhenghua and Wu, Min and Kwoh, Chee Keong and Li, Xiaoli and Guan, Cuntai},
-  booktitle = {Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence, {IJCAI-21}},
-  pages     = {2352--2359},
-  year      = {2021},
-}
-```
-```
-@article{emadeldeen2022catcc,
-  title   = {Self-supervised Contrastive Representation Learning for Semi-supervised Time-Series Classification},
-  author  = {Eldele, Emadeldeen and Ragab, Mohamed and Chen, Zhenghua and Wu, Min and Kwoh, Chee Keong and Li, Xiaoli and Guan, Cuntai},
-  journal = {arXiv preprint arXiv:2208.06616},
-  year    = {2022}
-}
-```
+On PSM dataset with the current configuration:
+- **F1-Score**: 0.8161
+- **Precision**: 0.8351
+- **Recall**: 0.7979
+- **AUROC**: 0.6228
+- **Best Threshold**: 0.432079
 
-## Contact
-For any issues/questions regarding the paper or reproducing the results, please contact me.   
-Emadeldeen Eldele   
-School of Computer Science and Engineering (SCSE),   
-Nanyang Technological University (NTU), Singapore.   
-Email: emad0002{at}e.ntu.edu.sg   
+## Acknowledgments
+
+- Original TS-TCC implementation: [emadeldeen24/TS-TCC](https://github.com/emadeldeen24/TS-TCC)
+- PSM dataset for server monitoring anomaly detection (https://github.com/eBay/RANSynCoders/tree/main)
