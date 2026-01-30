@@ -78,7 +78,9 @@ logger.debug(f'Mode:    {training_mode}')
 logger.debug("=" * 45)
 
 # Load datasets
-data_path = f"./data/{data_type}"
+# 使用 home_path 構建數據路徑，確保在 Colab 等環境中正確工作
+data_path = os.path.join(args.home_path, "data", data_type)
+logger.debug(f"Loading data from: {data_path}")
 train_dl, valid_dl, test_dl = data_generator(data_path, configs, training_mode)
 logger.debug("Data loaded ...")
 

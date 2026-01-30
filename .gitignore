@@ -1,0 +1,146 @@
+# ==========================================
+# Python
+# ==========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv
+
+# ==========================================
+# Jupyter Notebook
+# ==========================================
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# ==========================================
+# PyTorch / Machine Learning
+# ==========================================
+# Model checkpoints and data files (通常太大，不應該上傳)
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.hdf5
+
+# 數據文件（如果不想上傳數據）
+data/**/*.pt
+data/**/*.pth
+data/**/*.npy
+data/**/*.npz
+
+# 實驗結果和日誌（可選：如果不想上傳）
+experiments_logs/
+*.log
+logs/
+
+# ==========================================
+# IDE / Editors
+# ==========================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ==========================================
+# OS Files
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ==========================================
+# Temporary Files
+# ==========================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+
+# ==========================================
+# Environment Variables / Secrets
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# ==========================================
+# Project Specific
+# ==========================================
+# 備份文件
+*.bkup
+*.backup
+
+# 結果圖片（可選：如果不想上傳）
+*.png
+*.jpg
+*.jpeg
+# 但保留 misc/ 中的圖片
+!misc/**/*.png
+!misc/**/*.jpg
+!misc/**/*.jpeg

@@ -16,7 +16,7 @@ class NTXentLoss(torch.nn.Module):
     def _get_similarity_function(self, use_cosine_similarity):
         if use_cosine_similarity:
             self._cosine_similarity = torch.nn.CosineSimilarity(dim=-1)
-            return self._cosine_simililarity
+            return self._cosine_similarity_func
         else:
             return self._dot_simililarity
 
@@ -36,7 +36,7 @@ class NTXentLoss(torch.nn.Module):
         # v shape: (N, 2N)
         return v
 
-    def _cosine_simililarity(self, x, y):
+    def _cosine_similarity_func(self, x, y):
         # x shape: (N, 1, C)
         # y shape: (1, 2N, C)
         # v shape: (N, 2N)
